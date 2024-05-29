@@ -3,6 +3,9 @@ package org.example.entities;
 import jakarta.persistence.*;
 import org.example.enums.Rating;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
 import java.time.Year;
@@ -15,7 +18,7 @@ import java.util.Set;
 public class Film {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "film_id")
+    @Column(name = "film_id", unique = true, nullable = false)
     private Integer id;
 
     @Column(name = "title", length = 128, nullable = false)
@@ -29,17 +32,17 @@ public class Film {
     @Column(name = "release_year")
     private Year releaseDate;
 
-    @Column(name = "rental_duration")
+    @Column(name = "rental_duration", unique = true, nullable = false)
     private Integer rentalDuration = 3;
 
-    @Column(name = "rental_rate")
+    @Column(name = "rental_rate", nullable = false)
     @ColumnDefault("4.2")
     private Double rentalRate;
 
-    @Column(name = "length")
+    @Column(name = "length", unique = true)
     private Integer length;
 
-    @Column(name = "replacement_cost")
+    @Column(name = "replacement_cost", nullable = false)
     @ColumnDefault("5.2")
     private Double replacementCoast;
 
@@ -50,24 +53,38 @@ public class Film {
     @ElementCollection
     private Set<String> specialFeatures;
 
-    @Column(name = "last_update")
+    @UpdateTimestamp
+    @Column(name = "last_update", nullable = false)
     private Instant lastUpdate;
+
+    @ManyToMany(cascade = CascadeType.ALL)
+    @JoinTable(name = "film_actor", joinColumns = @JoinColumn(name = "film_id", referencedColumnName = "id"),
+            inverseJoinColumns = @JoinColumn(name = "actor_id", referencedColumnName = "id"))
+    @LazyCollection(LazyCollectionOption.EXTRA)
+    private Set<Actor>actors = new HashSet<Actor>();
+
+    @ManyToMany(cascade = CascadeType.ALL)
+    @JoinTable(name = "film_category", joinColumns = @JoinColumn(name = "film_id",referencedColumnName = "id"),
+    inverseJoinColumns = @JoinColumn(name = "category_id",referencedColumnName = "id"))
+    @LazyCollection(LazyCollectionOption.EXTRA)
+    private Set<Category>categories = new HashSet<Category>();
 
     public Film() {
         specialFeatures = new HashSet<>(Arrays.asList("Trailers", "Commentaries", "Deleted Scenes", "Behind the Scenes"));
     }
+
     @PrePersist
-    private void setRentalRate(){
-        if(rentalRate < 4.2){
+    private void setRentalRate() {
+        if (rentalRate < 4.2) {
             rentalRate = 4.2;
         }
-        if(rentalRate > 4.99){
+        if (rentalRate > 4.99) {
             rentalRate = 4.99;
         }
-        if (replacementCoast < 5.2){
+        if (replacementCoast < 5.2) {
             replacementCoast = 5.2;
         }
-        if(replacementCoast > 19.99){
+        if (replacementCoast > 19.99) {
             replacementCoast = 19.99;
         }
     }
@@ -158,5 +175,21 @@ public class Film {
 
     public void setLastUpdate(Instant lastUpdate) {
         this.lastUpdate = lastUpdate;
+    }
+
+    public Set<Actor> getActors() {
+        return actors;
+    }
+
+    public void setActors(Set<Actor> actors) {
+        this.actors = actors;
+    }
+
+    public Set<Category> getCategories() {
+        return categories;
+    }
+
+    public void setCategories(Set<Category> categories) {
+        this.categories = categories;
     }
 }

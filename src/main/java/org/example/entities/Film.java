@@ -69,6 +69,10 @@ public class Film {
     @LazyCollection(LazyCollectionOption.EXTRA)
     private Set<Category>categories = new HashSet<Category>();
 
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "language_id")
+    private Set<Language>languages = new HashSet<Language>();
+
     public Film() {
         specialFeatures = new HashSet<>(Arrays.asList("Trailers", "Commentaries", "Deleted Scenes", "Behind the Scenes"));
     }
